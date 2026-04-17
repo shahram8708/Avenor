@@ -1,9 +1,14 @@
 import atexit
+import json
 import os
+import socket
+import warnings
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from threading import Lock
 from typing import Any, Iterator
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.request import Request, urlopen
 
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
@@ -27,6 +32,7 @@ DB_POOL_MAX_CONN = max(_get_positive_int_from_env("DB_POOL_MAX_CONN", 10), DB_PO
 
 _POOL_LOCK = Lock()
 _CONNECTION_POOLS: dict[str, pool.SimpleConnectionPool] = {}
+_RESOLVED_DB_URLS: dict[str, str] = {}
 
 
 CREATE_WAITLIST_TABLE_SQL = """
@@ -94,26 +100,144 @@ def _normalize_db_url(db_path: str | None = None) -> str:
     return resolved
 
 
+def _hostname_resolves_locally(hostname: str) -> bool:
+    try:
+        socket.getaddrinfo(hostname, None)
+        return True
+    except socket.gaierror:
+        return False
+
+
+def _extract_doh_answer_ip(payload: dict[str, Any], record_type: int) -> str | None:
+    answers = payload.get("Answer")
+    if not isinstance(answers, list):
+        return None
+
+    for answer in answers:
+        if not isinstance(answer, dict):
+            continue
+        if int(answer.get("type", 0)) != record_type:
+            continue
+        ip_value = answer.get("data")
+        if isinstance(ip_value, str) and ip_value.strip():
+            return ip_value.strip()
+
+    return None
+
+
+def _resolve_hostname_via_doh(hostname: str) -> str | None:
+    lookup_targets = [
+        (
+            f"https://dns.google/resolve?name={hostname}&type=A",
+            1,
+            {"Accept": "application/json"},
+        ),
+        (
+            f"https://cloudflare-dns.com/dns-query?name={hostname}&type=A",
+            1,
+            {"Accept": "application/dns-json"},
+        ),
+        (
+            f"https://dns.google/resolve?name={hostname}&type=AAAA",
+            28,
+            {"Accept": "application/json"},
+        ),
+        (
+            f"https://cloudflare-dns.com/dns-query?name={hostname}&type=AAAA",
+            28,
+            {"Accept": "application/dns-json"},
+        ),
+    ]
+
+    for query_url, record_type, headers in lookup_targets:
+        request_headers = {
+            "User-Agent": "avenor-db-resolver/1.0",
+            **headers,
+        }
+
+        try:
+            request = Request(query_url, headers=request_headers)
+            with urlopen(request, timeout=5) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except Exception:
+            continue
+
+        if not isinstance(payload, dict):
+            continue
+
+        resolved_ip = _extract_doh_answer_ip(payload, record_type)
+        if resolved_ip:
+            return resolved_ip
+
+    return None
+
+
+def _inject_hostaddr_into_db_url(db_url: str, hostaddr: str) -> str:
+    parsed = urlsplit(db_url)
+    query_items = parse_qsl(parsed.query, keep_blank_values=True)
+
+    for key, _ in query_items:
+        if key.lower() == "hostaddr":
+            return db_url
+
+    query_items.append(("hostaddr", hostaddr))
+    updated_query = urlencode(query_items, doseq=True)
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, updated_query, parsed.fragment))
+
+
+def _make_dns_resilient_db_url(db_url: str) -> str:
+    hostname = urlsplit(db_url).hostname
+    if not hostname:
+        return db_url
+
+    if _hostname_resolves_locally(hostname):
+        return db_url
+
+    resolved_ip = _resolve_hostname_via_doh(hostname)
+    if not resolved_ip:
+        raise RuntimeError(
+            "DATABASE_URL host could not be resolved by local DNS. "
+            "Set a DNS server like 1.1.1.1 or 8.8.8.8, or use a DATABASE_URL with a resolvable host."
+        )
+
+    warnings.warn(
+        f"Local DNS could not resolve database host '{hostname}'. Using hostaddr fallback.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return _inject_hostaddr_into_db_url(db_url, resolved_ip)
+
+
 def _get_pool(db_path: str | None = None) -> pool.SimpleConnectionPool:
     db_url = _normalize_db_url(db_path)
 
-    existing_pool = _CONNECTION_POOLS.get(db_url)
+    connectable_db_url = _RESOLVED_DB_URLS.get(db_url)
+    if connectable_db_url is None:
+        connectable_db_url = _make_dns_resilient_db_url(db_url)
+        _RESOLVED_DB_URLS[db_url] = connectable_db_url
+
+    existing_pool = _CONNECTION_POOLS.get(connectable_db_url)
     if existing_pool is not None:
         return existing_pool
 
     with _POOL_LOCK:
-        existing_pool = _CONNECTION_POOLS.get(db_url)
+        connectable_db_url = _RESOLVED_DB_URLS.get(db_url)
+        if connectable_db_url is None:
+            connectable_db_url = _make_dns_resilient_db_url(db_url)
+            _RESOLVED_DB_URLS[db_url] = connectable_db_url
+
+        existing_pool = _CONNECTION_POOLS.get(connectable_db_url)
         if existing_pool is not None:
             return existing_pool
 
         created_pool = pool.SimpleConnectionPool(
             minconn=DB_POOL_MIN_CONN,
             maxconn=DB_POOL_MAX_CONN,
-            dsn=db_url,
+            dsn=connectable_db_url,
             connect_timeout=10,
             application_name="avenor-prelaunch",
         )
-        _CONNECTION_POOLS[db_url] = created_pool
+        _CONNECTION_POOLS[connectable_db_url] = created_pool
         return created_pool
 
 
@@ -122,6 +246,7 @@ def _close_all_pools() -> None:
         for conn_pool in _CONNECTION_POOLS.values():
             conn_pool.closeall()
         _CONNECTION_POOLS.clear()
+        _RESOLVED_DB_URLS.clear()
 
 
 atexit.register(_close_all_pools)
