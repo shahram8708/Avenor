@@ -23,7 +23,7 @@
                     <small class="text-secondary">Live and updating in real time</small>
                 </div>
 
-                <form id="heroWaitlistForm" class="waitlist-form mt-4" action="{{ url_for('register') }}" method="post" novalidate>
+                <form id="heroWaitlistForm" class="waitlist-form mt-4" action="{{ url_for('index') }}" method="post" novalidate>
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <label class="form-label" for="first_name">First Name</label>
@@ -453,7 +453,7 @@
             <div class="col-xl-9 text-center">
                 <h2>Do Not Miss Your Chance to Automate Everything</h2>
                 <p class="lead mb-4">Join 1,000 plus professionals already on the waitlist. Be first when we launch. Lock in early-bird pricing.</p>
-                <form id="bottomWaitlistForm" class="waitlist-form final-cta-form" action="{{ url_for('register') }}" method="post" novalidate>
+                <form id="bottomWaitlistForm" class="waitlist-form final-cta-form" action="{{ url_for('index') }}" method="post" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <input type="text" class="form-control" name="first_name" placeholder="First Name" maxlength="50" required>

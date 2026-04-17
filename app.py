@@ -1090,32 +1090,7 @@ def inject_global_context():
     }
 
 
-@app.get("/")
-def index():
-    try:
-        record_page_visit(
-            ip_address=anonymize_ip(get_client_ip()),
-            user_agent=sanitize_text(request.headers.get("User-Agent"), max_length=500),
-            referrer=sanitize_text(request.referrer, max_length=500),
-            db_path=app.config["DATABASE_URL"],
-        )
-    except Exception:
-        pass
-
-    waitlist_count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_URL"]))
-
-    return render_template(
-        "index.html",
-        waitlist_count=waitlist_count,
-        role_options=ROLE_OPTIONS,
-        industry_options=INDUSTRY_OPTIONS,
-        services_catalog=SERVICES_CATALOG,
-        ticker_items=TICKER_ITEMS,
-    )
-
-
-@app.post("/register")
-def register():
+def process_waitlist_registration():
     first_name = sanitize_text(request.form.get("first_name"), max_length=50)
     last_name = sanitize_text(request.form.get("last_name"), max_length=50)
     email = sanitize_text(request.form.get("email"), max_length=254).lower()
@@ -1176,6 +1151,40 @@ def register():
     }
     flash("You are on the waitlist. Welcome aboard.", "success")
     return redirect(url_for("success"))
+
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        return process_waitlist_registration()
+
+    try:
+        record_page_visit(
+            ip_address=anonymize_ip(get_client_ip()),
+            user_agent=sanitize_text(request.headers.get("User-Agent"), max_length=500),
+            referrer=sanitize_text(request.referrer, max_length=500),
+            db_path=app.config["DATABASE_URL"],
+        )
+    except Exception:
+        pass
+
+    waitlist_count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_URL"]))
+
+    return render_template(
+        "index.html",
+        waitlist_count=waitlist_count,
+        role_options=ROLE_OPTIONS,
+        industry_options=INDUSTRY_OPTIONS,
+        services_catalog=SERVICES_CATALOG,
+        ticker_items=TICKER_ITEMS,
+    )
+
+
+@app.route("/register", methods=["GET", "POST"], strict_slashes=False)
+def register():
+    if request.method == "GET":
+        return redirect(url_for("index", _anchor="join-waitlist"))
+    return process_waitlist_registration()
 
 
 @app.get("/success")

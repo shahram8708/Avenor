@@ -47,9 +47,11 @@ python app.py
 ## Public Routes
 
 1. `GET /` landing page
-2. `POST /register` waitlist registration
-3. `GET /success` success page
-4. `GET /api/waitlist-count` JSON waitlist count
+2. `POST /` waitlist registration (primary form endpoint)
+3. `POST /register` waitlist registration compatibility endpoint
+4. `GET /register` redirects to waitlist section on landing page
+5. `GET /success` success page
+6. `GET /api/waitlist-count` JSON waitlist count
 
 ## Admin Routes
 
