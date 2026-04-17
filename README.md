@@ -6,7 +6,7 @@ Production-grade Flask pre-launch website for validating demand for an AI Automa
 
 1. Full landing page with 54 categories and 481 automation services
 2. Waitlist registration with first name, last name, email, role, and industry
-3. SQLite persistence using Python built-in sqlite3
+3. PostgreSQL persistence with connection pooling (Neon-compatible)
 4. Live waitlist counter API and animated frontend counters
 5. Admin authentication and analytics dashboard
 6. CSV export of all waitlist registrants
@@ -17,7 +17,7 @@ Production-grade Flask pre-launch website for validating demand for an AI Automa
 2. Flask 3.x with Jinja2 templates
 3. Bootstrap 5.3 via CDN
 4. Vanilla JavaScript
-5. SQLite
+5. PostgreSQL + psycopg2
 
 ## Setup
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 # 4. Configure environment
 cp .env.example .env
-# Edit .env and set SECRET_KEY, ADMIN_EMAIL, and ADMIN_PASSWORD
+# Edit .env and set SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, and DATABASE_URL
 
 # 5. Run the application
 python app.py
@@ -70,6 +70,6 @@ python app.py
 
 ## Database
 
-`prelaunch.db` is auto-created on first application start. Tables are initialized automatically from `database.py`.
+The app connects using `DATABASE_URL` from `.env` and initializes tables automatically from `database.py` on startup.
 
 On startup, the app also auto-creates an `admin` role and seeds/updates the admin account from `.env`.

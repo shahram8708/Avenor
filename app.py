@@ -4,7 +4,7 @@ import os
 import random
 import re
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from urllib.parse import quote_plus
 
@@ -43,10 +43,9 @@ from database import (
 
 load_dotenv()
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE_PATH = os.getenv("DATABASE_PATH", "prelaunch.db")
-if not os.path.isabs(DATABASE_PATH):
-    DATABASE_PATH = os.path.join(BASE_DIR, DATABASE_PATH)
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL must be set in .env")
 
 
 def get_non_negative_int_from_env(name: str, default: int) -> int:
@@ -992,13 +991,13 @@ ALL_SERVICES = flatten_services()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-to-a-random-64-char-string")
-app.config["DATABASE_PATH"] = DATABASE_PATH
+app.config["DATABASE_URL"] = DATABASE_URL
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
 
-init_db(app.config["DATABASE_PATH"])
+init_db(app.config["DATABASE_URL"])
 
 
 def bootstrap_admin_identity() -> None:
@@ -1014,7 +1013,7 @@ def bootstrap_admin_identity() -> None:
     ensure_admin_role_and_user(
         admin_email=admin_email,
         admin_password=admin_password,
-        db_path=app.config["DATABASE_PATH"],
+        db_path=app.config["DATABASE_URL"],
     )
 
 
@@ -1068,12 +1067,12 @@ def to_public_waitlist_number(value: int | None) -> int:
 def admin_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):
-        prune_expired_admin_sessions(app.config["DATABASE_PATH"])
+        prune_expired_admin_sessions(app.config["DATABASE_URL"])
         session_token = session.get("admin_session_token")
         is_authed = session.get("admin_authenticated", False)
         if not is_authed or not session_token:
             return redirect(url_for("admin_login"))
-        if not is_admin_session_valid(session_token, app.config["DATABASE_PATH"]):
+        if not is_admin_session_valid(session_token, app.config["DATABASE_URL"]):
             session.clear()
             flash("Your admin session expired. Please log in again.", "warning")
             return redirect(url_for("admin_login"))
@@ -1098,12 +1097,12 @@ def index():
             ip_address=anonymize_ip(get_client_ip()),
             user_agent=sanitize_text(request.headers.get("User-Agent"), max_length=500),
             referrer=sanitize_text(request.referrer, max_length=500),
-            db_path=app.config["DATABASE_PATH"],
+            db_path=app.config["DATABASE_URL"],
         )
     except Exception:
         pass
 
-    waitlist_count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_PATH"]))
+    waitlist_count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_URL"]))
 
     return render_template(
         "index.html",
@@ -1153,14 +1152,14 @@ def register():
             ip_address=client_ip,
             user_agent=user_agent,
             referrer=referrer,
-            db_path=app.config["DATABASE_PATH"],
+            db_path=app.config["DATABASE_URL"],
         )
     except Exception:
         flash("Something went wrong while saving your registration. Please try again.", "danger")
         return redirect(url_for("index", _anchor="join-waitlist"))
 
     if result["status"] == "duplicate":
-        existing = get_registrant_by_email(email, app.config["DATABASE_PATH"])
+        existing = get_registrant_by_email(email, app.config["DATABASE_URL"])
         raw_position = existing["position"] if existing else result.get("position", 0)
         session["registration_context"] = {
             "first_name": existing["first_name"] if existing else first_name,
@@ -1212,7 +1211,7 @@ def success():
 
 @app.get("/api/waitlist-count")
 def api_waitlist_count():
-    count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_PATH"]))
+    count = to_public_waitlist_number(get_waitlist_count(app.config["DATABASE_URL"]))
     return jsonify({"count": count})
 
 
@@ -1236,7 +1235,7 @@ def admin_login_post():
     auth_user = authenticate_admin_user(
         admin_email=email,
         admin_password=password,
-        db_path=app.config["DATABASE_PATH"],
+        db_path=app.config["DATABASE_URL"],
     )
 
     if auth_user:
@@ -1248,8 +1247,8 @@ def admin_login_post():
 
         token = secrets.token_urlsafe(32)
         session["admin_session_token"] = token
-        expires_at = datetime.utcnow() + timedelta(hours=12)
-        create_admin_session(token, expires_at, app.config["DATABASE_PATH"])
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=12)
+        create_admin_session(token, expires_at, app.config["DATABASE_URL"])
 
         flash("Admin login successful.", "success")
         return redirect(url_for("admin_dashboard"))
@@ -1268,16 +1267,16 @@ def admin_dashboard():
     except ValueError:
         page = 1
 
-    stats = get_dashboard_stats(app.config["DATABASE_PATH"])
+    stats = get_dashboard_stats(app.config["DATABASE_URL"])
     pagination = get_registrants_paginated(
         page=page,
         per_page=50,
         sort_by=sort_by,
-        db_path=app.config["DATABASE_PATH"],
+        db_path=app.config["DATABASE_URL"],
     )
-    daily_registrations = get_registrations_per_day(30, app.config["DATABASE_PATH"])
-    role_distribution = get_distribution_by_field("role", app.config["DATABASE_PATH"])
-    industry_distribution = get_distribution_by_field("industry", app.config["DATABASE_PATH"])
+    daily_registrations = get_registrations_per_day(30, app.config["DATABASE_URL"])
+    role_distribution = get_distribution_by_field("role", app.config["DATABASE_URL"])
+    industry_distribution = get_distribution_by_field("industry", app.config["DATABASE_URL"])
 
     return render_template(
         "admin_dashboard.html",
@@ -1293,7 +1292,7 @@ def admin_dashboard():
 @app.get("/admin/export/csv")
 @admin_required
 def admin_export_csv():
-    rows = get_all_registrants_for_csv(app.config["DATABASE_PATH"])
+    rows = get_all_registrants_for_csv(app.config["DATABASE_URL"])
 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
@@ -1343,7 +1342,7 @@ def admin_export_csv():
 def admin_logout():
     token = session.get("admin_session_token")
     if token:
-        delete_admin_session(token, app.config["DATABASE_PATH"])
+        delete_admin_session(token, app.config["DATABASE_URL"])
     session.clear()
     flash("Logged out successfully.", "success")
     return redirect(url_for("admin_login"))

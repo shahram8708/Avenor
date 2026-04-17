@@ -2,3 +2,4 @@ Flask
 python-dotenv
 bleach
 gunicorn
+psycopg2-binary
