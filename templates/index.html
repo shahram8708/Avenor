@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+
+{% block title %}Avenor | AI Automation Agent Platform Pre-Launch{% endblock %}
+
+{% block content %}
+<section class="hero position-relative" id="join-waitlist">
+    <div class="hero-grid-overlay"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center g-5 min-vh-100 py-5">
+            <div class="col-lg-7">
+                <span class="prelaunch-badge">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    Early Access and Limited Spots
+                </span>
+                <h1 class="hero-title mt-4">Your AI Team That Never Sleeps, Never Complains, and Works 10x Faster</h1>
+                <p class="hero-subtitle mt-3">
+                    Avenor automates 481 real-world tasks across 54 categories from financial research to legal drafting,
+                    code generation to healthcare documentation. Join the waitlist today and be first when we launch.
+                </p>
+
+                <div class="waitlist-counter-card glass-card mt-4">
+                    <p class="mb-1"><i class="bi bi-people-fill"></i> <span id="waitlistCounter" data-count="{{ waitlist_count }}">{{ waitlist_count }}</span> people have already joined the waitlist</p>
+                    <small class="text-secondary">Live and updating in real time</small>
+                </div>
+
+                <form id="heroWaitlistForm" class="waitlist-form mt-4" action="{{ url_for('register') }}" method="post" novalidate>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="first_name">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" maxlength="50" required>
+                            <div class="invalid-feedback">Please enter your first name.</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="last_name">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" maxlength="50" required>
+                            <div class="invalid-feedback">Please enter your last name.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="email">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" maxlength="254" required>
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="role">Your Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">Select your role</option>
+                                {% for option in role_options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="industry">Your Industry</label>
+                            <select class="form-select" id="industry" name="industry">
+                                <option value="">Select your industry</option>
+                                {% for option in industry_options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-cta w-100" data-submit-text="Reserve My Free Spot">
+                                <span class="btn-label"><i class="bi bi-rocket-takeoff"></i> Reserve My Free Spot</span>
+                                <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="microcopy mt-3 mb-0">Free forever plan available, no credit card required, cancel anytime.</p>
+                </form>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="mockup-shell glass-card">
+                    <div class="mockup-header d-flex justify-content-between align-items-center">
+                        <span class="mockup-dot"></span>
+                        <span class="mockup-dot"></span>
+                        <span class="mockup-dot"></span>
+                    </div>
+                    <div class="mockup-card running mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Task Running</strong>
+                            <span>64%</span>
+                        </div>
+                        <div class="progress mt-2" role="progressbar" aria-label="Task progress" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: 64%"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-stack mt-3">
+                        <div class="mockup-card complete">Task Completed and Exported</div>
+                        <div class="mockup-card complete">Task Completed and Sent to Workflow</div>
+                        <div class="mockup-card complete">Task Completed and Logged</div>
+                    </div>
+                    <div class="floating-stat stat-one">
+                        <i class="bi bi-lightning-charge"></i>
+                        4.2 min avg. task time
+                    </div>
+                    <div class="floating-stat stat-two">
+                        <i class="bi bi-bullseye"></i>
+                        481 use cases
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ticker-section py-3">
+    <div class="ticker-track" id="industryTicker">
+        {% for _ in range(2) %}
+            {% for item in ticker_items %}
+                <span class="ticker-item"><i class="bi bi-dot"></i> {{ item }}</span>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section-block" id="features">
+    <div class="container">
+        <div class="section-heading text-center mb-5">
+            <h2 class="gradient-text">Why Avenor</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="glass-card info-card h-100">
+                    <h3><i class="bi bi-x-circle text-danger"></i> The Problem</h3>
+                    <p>Knowledge workers spend 40 to 70 percent of their day on repetitive digital tasks. Research, drafting, emails, data entry, scheduling, and scraping often do not require human judgment.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="glass-card info-card h-100">
+                    <h3><i class="bi bi-emoji-frown"></i> What You Do Now</h3>
+                    <p>You manually research, write, scrape, email, code, schedule, and data-enter. That means hours of cognitive drain every day, every week, every quarter.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="glass-card info-card h-100">
+                    <h3><i class="bi bi-check-circle text-success"></i> Avenor Solution</h3>
+                    <p>AI agents autonomously handle it at 10x speed, 24 by 7, with transparent and structured outputs you can trust and verify before sharing.</p>
+                </div>
+            </div>
+        </div>
+        <p class="impact-quote text-center mt-5 mb-0">The average professional wastes 28 percent of the day on email alone, and 19 percent gathering information. Avenor eliminates both.</p>
+    </div>
+</section>
+
+<section class="section-block pt-0" id="stats">
+    <div class="container">
+        <div class="stats-wrap">
+            <div class="stat-card glass-card">
+                <h3 class="stat-number" data-target="481">0</h3>
+                <p>Use Cases Automated</p>
+            </div>
+            <div class="stat-card glass-card">
+                <h3 class="stat-number" data-target="54">0</h3>
+                <p>Categories Covered</p>
+            </div>
+            <div class="stat-card glass-card">
+                <h3 class="stat-number" data-target="32">0</h3>
+                <p>Industries Served</p>
+            </div>
+            <div class="stat-card glass-card">
+                <h3 class="stat-number" data-target="10">0</h3>
+                <p>Speed vs Manual Work</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="services">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="gradient-text">Everything You Will Be Able to Automate</h2>
+            <p class="text-secondary mb-0">481 real-world tasks. 54 categories. Every one of them available to you.</p>
+        </div>
+
+        <div class="service-search-wrap mb-4">
+            <i class="bi bi-search"></i>
+            <input type="text" id="serviceSearch" class="form-control" placeholder="Search services... for example invoice processing, legal drafting, SEO">
+        </div>
+
+        <p id="noServiceResults" class="text-center text-secondary d-none">No results found. Try another keyword.</p>
+
+        <div class="accordion service-accordion" id="servicesAccordion">
+            {% for category in services_catalog %}
+                <div class="accordion-item service-category" data-category-id="{{ category.id }}">
+                    <h3 class="accordion-header d-flex" id="heading{{ category.id }}">
+                        <button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ category.id }}" aria-expanded="false" aria-controls="collapse{{ category.id }}">
+                            <span class="category-icon"><i class="{{ category.icon }}"></i></span>
+                            <span class="category-title">{{ category.id }}. {{ category.name }}</span>
+                            <span class="badge category-count-badge ms-2">{{ category.services|length }}</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary category-toggle" type="button" data-bs-target="#collapse{{ category.id }}">Show All</button>
+                    </h3>
+                    <div id="collapse{{ category.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ category.id }}" data-bs-parent="#servicesAccordion">
+                        <div class="accordion-body">
+                            {% for service in category.services %}
+                                <span class="service-badge" title="Coming Soon">{{ service }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="how-it-works">
+    <div class="container">
+        <div class="section-heading text-center mb-5">
+            <h2 class="gradient-text">How It Will Work</h2>
+        </div>
+        <div class="workflow-steps">
+            <div class="workflow-step glass-card">
+                <div class="step-number">1</div>
+                <h3>Describe Your Task</h3>
+                <p>Tell the AI what you need in plain English. No configuration required. Just describe the goal.</p>
+            </div>
+            <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="workflow-step glass-card">
+                <div class="step-number">2</div>
+                <h3>Agent Executes</h3>
+                <p>Our agents autonomously browse, write, code, research, and execute your multi-step workflow.</p>
+            </div>
+            <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="workflow-step glass-card">
+                <div class="step-number">3</div>
+                <h3>Review and Download</h3>
+                <p>Get structured and formatted output. Edit it, export it, or feed it into your next workflow.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="pricing">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="gradient-text">Simple, Transparent Pricing</h2>
+            <p class="text-secondary">Early Access registrants get exclusive early-bird pricing when we launch.</p>
+        </div>
+
+        <div class="early-bird-banner mb-4">
+            Early Bird Offer: Register today and lock in 30 percent off your first 12 months, automatically applied when we launch.
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="pricing-card glass-card h-100">
+                    <span class="ribbon">Coming Soon</span>
+                    <h3>Free</h3>
+                    <p class="price">$0<span>/mo</span></p>
+                    <ul>
+                        <li>50 task types</li>
+                        <li>Basic workflows</li>
+                        <li>7 day retention</li>
+                        <li>1 integration</li>
+                    </ul>
+                    <a href="#join-waitlist" class="btn btn-outline-primary w-100">Join Free</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="pricing-card glass-card h-100 featured">
+                    <span class="ribbon">Coming Soon</span>
+                    <h3>Pro <span class="popular">Popular</span></h3>
+                    <p class="price">$49<span>/month</span></p>
+                    <p class="price-sub">$399 per year</p>
+                    <ul>
+                        <li>All 481 use cases</li>
+                        <li>500 tasks per month</li>
+                        <li>Unlimited workflow steps</li>
+                        <li>Scheduling and automation</li>
+                        <li>API access</li>
+                        <li>PDF and DOCX export</li>
+                        <li>Priority queue</li>
+                    </ul>
+                    <a href="#join-waitlist" class="btn btn-cta w-100">Join Pro</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="pricing-card glass-card h-100">
+                    <span class="ribbon">Coming Soon</span>
+                    <h3>Team</h3>
+                    <p class="price">$79<span>/user/mo</span></p>
+                    <p class="price-sub">Minimum 5 seats</p>
+                    <ul>
+                        <li>Everything in Pro</li>
+                        <li>Team workspaces</li>
+                        <li>Admin panel</li>
+                        <li>SSO with Google and Azure AD</li>
+                        <li>1 year output retention</li>
+                    </ul>
+                    <a href="#join-waitlist" class="btn btn-outline-primary w-100">Join Team</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="pricing-card glass-card h-100">
+                    <span class="ribbon">Coming Soon</span>
+                    <h3>Enterprise</h3>
+                    <p class="price">Custom<span> pricing</span></p>
+                    <ul>
+                        <li>Unlimited tasks</li>
+                        <li>Dedicated infrastructure</li>
+                        <li>SLA 99.9 percent uptime</li>
+                        <li>Custom integrations</li>
+                        <li>HIPAA and SOC 2 tooling</li>
+                        <li>Dedicated CSM</li>
+                        <li>White-labeling options</li>
+                    </ul>
+                    <a href="#join-waitlist" class="btn btn-outline-primary w-100">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="personas">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="gradient-text">Who Is This For</h2>
+        </div>
+        <div class="persona-grid">
+            <div class="persona-card glass-card">
+                <h3><i class="bi bi-briefcase"></i> The Professional</h3>
+                <p>Marketing managers, analysts, consultants, lawyers, and researchers who need output quality and speed.</p>
+            </div>
+            <div class="persona-card glass-card">
+                <h3><i class="bi bi-rocket-takeoff"></i> The Startup Founder</h3>
+                <p>Solo founders wearing every hat from sales and operations to marketing and product execution.</p>
+            </div>
+            <div class="persona-card glass-card">
+                <h3><i class="bi bi-building"></i> The Enterprise Team</h3>
+                <p>Teams that need scalable automation, governance, and collaboration without workflow friction.</p>
+            </div>
+            <div class="persona-card glass-card">
+                <h3><i class="bi bi-code-slash"></i> The Developer</h3>
+                <p>Developers who need AI to write, test, explain, and document code across complex projects.</p>
+            </div>
+            <div class="persona-card glass-card">
+                <h3><i class="bi bi-journal-text"></i> The Researcher</h3>
+                <p>Academics, scientists, and journalists who need deep research and high quality synthesis fast.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="testimonials">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="gradient-text">Beta Tester Feedback</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="glass-card testimonial-card h-100">
+                    <p class="stars">★★★★★</p>
+                    <p>I cannot believe how much time I will save when this launches. The breadth of use cases is unreal and can replace several tools I currently pay for.</p>
+                    <p class="mb-0"><strong>Rohan S.</strong>, Marketing Manager <span class="beta-tag">Beta Tester</span></p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="glass-card testimonial-card h-100">
+                    <p class="stars">★★★★★</p>
+                    <p>As a consultant, the research automation alone is worth far more than the plan price. The legal drafting range is especially strong.</p>
+                    <p class="mb-0"><strong>Priya M.</strong>, Strategy Consultant <span class="beta-tag">Beta Tester</span></p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="glass-card testimonial-card h-100">
+                    <p class="stars">★★★★★</p>
+                    <p>Finally an AI platform that maps to enterprise healthcare workflows. Prior authorization and EHR entry automation are exactly what we need.</p>
+                    <p class="mb-0"><strong>Dr. Anil K.</strong>, Healthcare IT Director <span class="beta-tag">Beta Tester</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="faq">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="gradient-text">Frequently Asked Questions</h2>
+        </div>
+        <div class="accordion faq-accordion" id="faqAccordion">
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqOneHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqOne" aria-expanded="false" aria-controls="faqOne">What is Avenor?</button>
+                </h3>
+                <div id="faqOne" class="accordion-collapse collapse" aria-labelledby="faqOneHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">Avenor is an AI automation agent platform that lets you delegate 481 real-world digital tasks to AI agents, from research and drafting to code generation, email automation, and enterprise workflows without technical setup.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqTwoHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwo" aria-expanded="false" aria-controls="faqTwo">Is this free and do I need a credit card to join the waitlist?</button>
+                </h3>
+                <div id="faqTwo" class="accordion-collapse collapse" aria-labelledby="faqTwoHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">Joining the waitlist is completely free. No credit card and no payment are required. At launch there will be a forever-free plan, plus paid plans starting at $49 per month.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqThreeHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThree" aria-expanded="false" aria-controls="faqThree">When will the full platform launch?</button>
+                </h3>
+                <div id="faqThree" class="accordion-collapse collapse" aria-labelledby="faqThreeHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">The platform is in final development. Waitlist members will be first to know when we launch and early registrants automatically receive exclusive early-bird pricing.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqFourHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFour" aria-expanded="false" aria-controls="faqFour">What can Avenor actually do?</button>
+                </h3>
+                <div id="faqFour" class="accordion-collapse collapse" aria-labelledby="faqFourHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">It covers 481 use cases across 54 categories including web research, email automation, code generation, data extraction, legal drafting, healthcare workflows, finance operations, HR, marketing, sales, IT, and much more.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqFiveHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFive" aria-expanded="false" aria-controls="faqFive">Will my data be safe?</button>
+                </h3>
+                <div id="faqFive" class="accordion-collapse collapse" aria-labelledby="faqFiveHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">Security is built in from day one with encryption, bcrypt password hashing in platform plans, role-based access controls, audit trails, and enterprise compliance tooling including HIPAA and SOC 2 compatibility options.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqSixHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSix" aria-expanded="false" aria-controls="faqSix">Do I need technical knowledge to use it?</button>
+                </h3>
+                <div id="faqSix" class="accordion-collapse collapse" aria-labelledby="faqSixHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">No technical background is needed. You describe your task in plain English and the agent handles execution. Non-technical teams can run complex workflows without writing code.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqSevenHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqSeven" aria-expanded="false" aria-controls="faqSeven">Can my team use it together?</button>
+                </h3>
+                <div id="faqSeven" class="accordion-collapse collapse" aria-labelledby="faqSevenHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">Yes. The Team plan includes shared workflows, collaborative workspaces, templates, admin controls, audit logs, and SSO. Enterprise supports unlimited team sizes with custom governance.</div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faqEightHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqEight" aria-expanded="false" aria-controls="faqEight">What integrations will be available?</button>
+                </h3>
+                <div id="faqEight" class="accordion-collapse collapse" aria-labelledby="faqEightHeading" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">The platform roadmap includes Google Workspace, Microsoft 365, Salesforce, SAP, Epic EHR, Slack, GitHub, and many more. API access is available on Pro and higher tiers.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="final-cta-section" id="final-cta">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9 text-center">
+                <h2>Do Not Miss Your Chance to Automate Everything</h2>
+                <p class="lead mb-4">Join 1,000 plus professionals already on the waitlist. Be first when we launch. Lock in early-bird pricing.</p>
+                <form id="bottomWaitlistForm" class="waitlist-form final-cta-form" action="{{ url_for('register') }}" method="post" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="first_name" placeholder="First Name" maxlength="50" required>
+                            <div class="invalid-feedback">First name is required.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="last_name" placeholder="Last Name" maxlength="50" required>
+                            <div class="invalid-feedback">Last name is required.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="email" class="form-control" name="email" placeholder="Email Address" maxlength="254" required>
+                            <div class="invalid-feedback">Please provide a valid email.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="role">
+                                <option value="">Your Role</option>
+                                {% for option in role_options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="industry">
+                                <option value="">Your Industry</option>
+                                {% for option in industry_options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-light btn-lg px-5" data-submit-text="Reserve My Free Spot">
+                                <span class="btn-label">Reserve My Free Spot</span>
+                                <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <p class="mb-0 mt-3 cta-privacy">Your information is private and will never be shared.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="stickyCtaBar" class="sticky-cta-bar" aria-hidden="true">
+    <span><i class="bi bi-people-fill"></i> <span id="stickyWaitlistCount">{{ waitlist_count }}</span> people have joined</span>
+    <a href="#join-waitlist" class="btn btn-sm btn-cta">Join Waitlist Now</a>
+</div>
+{% endblock %}

@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard | Avenor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="admin-body">
+    <div class="admin-shell py-4">
+        <div class="container-fluid px-lg-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ url_for('static', filename='img/logo_avenor.png') }}" alt="Avenor" class="admin-brand-logo">
+                    <div>
+                    <h1 class="h3 mb-1">Waitlist Dashboard</h1>
+                    <p class="text-secondary mb-0">Track signups, demographics, and growth trends.</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary" href="{{ url_for('admin_export_csv') }}"><i class="bi bi-download me-1"></i> Download CSV</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for('admin_logout') }}"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6 col-xl-2">
+                    <div class="glass-card admin-stat-card h-100">
+                        <p>Total Registrants</p>
+                        <h2>{{ stats.total }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-2">
+                    <div class="glass-card admin-stat-card h-100">
+                        <p>Registrations Today</p>
+                        <h2>{{ stats.today }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-2">
+                    <div class="glass-card admin-stat-card h-100">
+                        <p>Registrations This Week</p>
+                        <h2>{{ stats.this_week }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="glass-card admin-stat-card h-100">
+                        <p>Most Popular Role</p>
+                        <h2 class="fs-5 mb-0">{{ stats.popular_role }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="glass-card admin-stat-card h-100">
+                        <p>Most Popular Industry</p>
+                        <h2 class="fs-5 mb-0">{{ stats.popular_industry }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-3 p-lg-4 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h5 mb-0">Registrants</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <input type="text" id="registrantSearch" class="form-control" placeholder="Search by name or email" style="min-width: 260px;">
+                        <select id="sortSelect" class="form-select" style="min-width: 220px;">
+                            <option value="date" {% if pagination.sort_by == 'date' %}selected{% endif %}>Sort by Date</option>
+                            <option value="name" {% if pagination.sort_by == 'name' %}selected{% endif %}>Sort by Name</option>
+                            <option value="role" {% if pagination.sort_by == 'role' %}selected{% endif %}>Sort by Role</option>
+                            <option value="industry" {% if pagination.sort_by == 'industry' %}selected{% endif %}>Sort by Industry</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="registrantsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Industry</th>
+                                <th>Date Registered</th>
+                                <th>Waitlist Position</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in registrants %}
+                                <tr>
+                                    <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+                                    <td>{{ row.first_name }} {{ row.last_name }}</td>
+                                    <td>{{ row.email }}</td>
+                                    <td>{{ row.role or 'Unspecified' }}</td>
+                                    <td>{{ row.industry or 'Unspecified' }}</td>
+                                    <td>{{ row.registered_at }}</td>
+                                    <td>#{{ row.position }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                    <p class="mb-0 text-secondary">Showing page {{ pagination.page }} of {{ pagination.total_pages }} and {{ pagination.total }} total records.</p>
+                    <nav aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item {% if pagination.page <= 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin_dashboard', page=pagination.page - 1, sort=pagination.sort_by) }}">Previous</a>
+                            </li>
+                            <li class="page-item disabled"><span class="page-link">{{ pagination.page }}</span></li>
+                            <li class="page-item {% if pagination.page >= pagination.total_pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin_dashboard', page=pagination.page + 1, sort=pagination.sort_by) }}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-12">
+                    <div class="glass-card p-3 p-lg-4 h-100">
+                        <h3 class="h5 mb-3">Registrations Per Day (Last 30 Days)</h3>
+                        <div class="admin-chart-wrap">
+                            <canvas id="dailyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="glass-card p-3 p-lg-4 h-100">
+                        <h3 class="h5 mb-3">Distribution by Role</h3>
+                        <div class="admin-chart-wrap admin-chart-wrap--tall">
+                            <canvas id="roleChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="glass-card p-3 p-lg-4 h-100">
+                        <h3 class="h5 mb-3">Distribution by Industry</h3>
+                        <div class="admin-chart-wrap admin-chart-wrap--tall">
+                            <canvas id="industryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        const dailyData = {{ daily_registrations | tojson }};
+        const roleData = {{ role_distribution | tojson }};
+        const industryData = {{ industry_distribution | tojson }};
+
+        const dailyCtx = document.getElementById("dailyChart");
+        const roleCtx = document.getElementById("roleChart");
+        const industryCtx = document.getElementById("industryChart");
+
+        if (dailyCtx) {
+            new Chart(dailyCtx, {
+                type: "line",
+                data: {
+                    labels: dailyData.map(item => item.day),
+                    datasets: [{
+                        label: "Registrations",
+                        data: dailyData.map(item => item.total),
+                        borderColor: "#2563EB",
+                        backgroundColor: "rgba(37, 99, 235, 0.16)",
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: "#0F172A" } }
+                    },
+                    scales: {
+                        x: { ticks: { color: "#475569" }, grid: { color: "rgba(148, 163, 184, 0.25)" } },
+                        y: { beginAtZero: true, ticks: { color: "#475569" }, grid: { color: "rgba(148, 163, 184, 0.25)" } }
+                    }
+                }
+            });
+        }
+
+        if (roleCtx) {
+            new Chart(roleCtx, {
+                type: "bar",
+                data: {
+                    labels: roleData.map(item => item.label),
+                    datasets: [{
+                        label: "Registrants",
+                        data: roleData.map(item => item.total),
+                        backgroundColor: "rgba(14, 165, 164, 0.7)",
+                        borderColor: "#0EA5A4",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: "#0F172A" } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: "#475569" }, grid: { color: "rgba(148, 163, 184, 0.25)" } },
+                        y: { ticks: { color: "#475569" }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        if (industryCtx) {
+            new Chart(industryCtx, {
+                type: "bar",
+                data: {
+                    labels: industryData.map(item => item.label),
+                    datasets: [{
+                        label: "Registrants",
+                        data: industryData.map(item => item.total),
+                        backgroundColor: "rgba(249, 115, 22, 0.72)",
+                        borderColor: "#F97316",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: "#0F172A" } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: "#475569" }, grid: { color: "rgba(148, 163, 184, 0.25)" } },
+                        y: { ticks: { color: "#475569" }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const sortSelect = document.getElementById("sortSelect");
+        if (sortSelect) {
+            sortSelect.addEventListener("change", event => {
+                const selected = event.target.value;
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set("sort", selected);
+                currentUrl.searchParams.set("page", "1");
+                window.location.href = currentUrl.toString();
+            });
+        }
+
+        const registrantSearch = document.getElementById("registrantSearch");
+        const table = document.getElementById("registrantsTable");
+        if (registrantSearch && table) {
+            registrantSearch.addEventListener("input", event => {
+                const query = event.target.value.trim().toLowerCase();
+                const rows = table.querySelectorAll("tbody tr");
+                rows.forEach(row => {
+                    const name = row.children[1]?.textContent?.toLowerCase() || "";
+                    const email = row.children[2]?.textContent?.toLowerCase() || "";
+                    const match = name.includes(query) || email.includes(query);
+                    row.style.display = match ? "" : "none";
+                });
+            });
+        }
+    </script>
+</body>
+</html>

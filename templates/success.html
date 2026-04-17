@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Success | Avenor Waitlist{% endblock %}
+
+{% block content %}
+<section class="success-section py-5">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="glass-card success-card text-center">
+                    <div class="success-check-wrap mb-3">
+                        <span class="success-check"><i class="bi bi-check-lg"></i></span>
+                    </div>
+                    <h1 class="mb-3">You are on the list</h1>
+                    <p class="lead mb-2">You are <strong>#{{ position }}</strong> on the waitlist.</p>
+                    <p class="text-secondary mb-4">
+                        {{ first_name }}, thank you for joining the Avenor waitlist. When we launch, you will be among the first to know,
+                        and your early-bird 30 percent discount will be applied automatically.
+                    </p>
+
+                    <div class="preview-box text-start mt-4">
+                        <h2 class="h5 mb-3">Here is a taste of what you will be able to automate</h2>
+                        <div>
+                            {% for service in services_preview %}
+                                <span class="service-badge" title="Coming Soon">{{ service }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="share-actions mt-4">
+                        <a class="btn btn-outline-primary" href="{{ x_share_link }}" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-x-twitter me-1"></i> Share on X
+                        </a>
+                        <a class="btn btn-outline-primary" href="{{ linkedin_share_link }}" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-linkedin me-1"></i> Share on LinkedIn
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <a class="btn btn-cta" href="{{ home_url }}"><i class="bi bi-arrow-left"></i> Back to Avenor</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
